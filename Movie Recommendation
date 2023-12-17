@@ -1,0 +1,44 @@
+pip install scikit-surprise
+# Import necessary libraries
+from surprise import Dataset, Reader, SVD
+from surprise.model_selection import train_test_split
+from surprise import accuracy
+
+# Define a reader object
+reader = Reader(line_format='user item rating timestamp', sep='\t', rating_scale=(1, 5))
+
+file_path = '/content/ml-1m.zip'
+
+# Split the data into training and testing sets
+trainset, testset = train_test_split(data, test_size=0.25)
+
+# Build the collaborative filtering model using Singular Value Decomposition (SVD)
+model = SVD()
+model.fit(trainset)
+
+# Make predictions on the test set
+predictions = model.test(testset)
+
+# Evaluate the model
+accuracy.rmse(predictions)
+
+# Get top N movie recommendations for a user (replace 'user_id' with an actual user ID)
+user_id = 'user_id'
+user_ratings = data.raw_ratings
+already_rated = set()
+for uid, iid, true_r, est, _ in predictions:
+    if uid == user_id:
+        already_rated.add(iid)
+
+movies_to_recommend = []
+for iid in trainset.all_items():
+    if iid not in already_rated:
+        movies_to_recommend.append((iid, model.predict(user_id, iid).est))
+
+# Sort movies by predicted rating
+movies_to_recommend.sort(key=lambda x: x[1], reverse=True)
+
+# Print the top N recommended movies (replace N with the number of recommendations you want)
+top_n = 10
+for movie, rating in movies_to_recommend[:top_n]:
+    print(f'Movie ID: {movie}, Predicted Rating: {rating}')
